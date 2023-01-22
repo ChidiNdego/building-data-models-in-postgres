@@ -1,0 +1,208 @@
+#### Create dimension table for date
+
+CREATE TABLE star.dimDate 
+(
+	date_key integer NOT NULL PRIMARY KEY,
+	date date NOT NULL,
+	year smallint NOT NULL,
+	quarter smallint NOT NULL,
+	month smallint NOT NULL,
+	day smallint NOT NULL,
+	week smallint NOT NULL,
+	is_weekend boolean
+);
+
+
+#### Insert value into dimdate table
+
+INSERT INTO star.dimDate
+(date_key, date, year, quarter, month, day, week, is_weekend)
+SELECT
+	DISTINCT(TO_CHAR(payment_date :: DATE, 'yyyMMDD')::integer) as date_key,
+	date(payment_date) as date,
+	EXTRACT(year from payment_date) as year,
+	EXTRACT(quarter from payment_date) as quarter,
+	EXTRACT(month from payment_date) as month,
+	EXTRACT(day from payment_date) as day,
+	EXTRACT(week from payment_date) as week,
+	CASE WHEN EXTRACT(ISODOW FROM payment_date) IN (6,7) THEN True ELSE False END as is_weekend
+FROM public.payment;
+
+
+#### Create dimension table for customer
+
+CREATE TABLE star.dimCustomer
+(
+	customer_key SERIAL NOT NULL PRIMARY KEY,
+	customer_id smallint NOT NULL,
+	first_name varchar(50) NOT NULL,
+	last_name varchar(50) NOT NULL,
+	email varchar(50),
+	address varchar(50) NOT NULL,
+	address2 varchar(50),
+	district varchar(20) NOT NULL,
+	city varchar(50) NOT NULL,
+	country varchar(50) NOT NULL,
+	postal_code varchar(10),
+	create_date date NOT NULL,
+	start_date date NOT NULL,
+	end_date date NOT NULL
+);
+
+#### Insert value into dimcustomer table
+
+INSERT INTO star.dimCustomer
+(customer_key, customer_id, first_name, last_name, email, address, address2, 
+ district, city, country, postal_code, create_date, start_date, end_date)
+SELECT
+	c.customer_id as customer_key,
+	c.customer_id,
+	c.first_name,
+	c.last_name,
+	c.email,
+	a.address,
+	a.address2,
+	a.district,
+	ci.city,
+	co.country,
+	postal_code,
+	c.create_date, 
+	now() as start_date,
+	now() as end_date	
+FROM customer c
+JOIN address a ON (c.address_id = a.address_id)
+JOIN city ci ON (a.city_id = ci.city_id)
+JOIN country co ON (ci.country_id = co.country_id);
+
+
+#### Create dimension table for movie
+
+CREATE TABLE star.dimMovie
+(
+	movie_key			SERIAL NOT NULL PRIMARY KEY,
+	film_id				smallint NOT NULL,
+	title				varchar(255) NOT NULL,
+	description			text,
+	release_year		year,
+	language 			varchar(20) NOT NULL,
+	original_language 	varchar(20),
+	rental_duration		smallint NOT NULL,
+	length				smallint NOT NULL,
+	ratings				varchar(5) NOT NULL,
+	special_features	varchar(60) NOT NULL
+);
+
+#### Insert value into dimmovie table
+
+INSERT INTO star.dimmovie
+(movie_key, film_id, title, description, release_year, language, original_language, rental_duration,
+length, ratings, special_features)
+SELECT
+	f.film_id as movie_key,
+	f.film_id,
+	f.title,
+	f.description,
+	f.release_year,
+	l.name as language,
+	l.name as original_language,
+	f.rental_duration,
+	f.length,
+	f.rating as ratings,
+	f.special_features
+FROM public.film f
+JOIN language l	ON (f.language_id = l.language_id);
+
+
+#### Create dimension table for store
+CREATE TABLE star.dimStore
+(
+	store_key			SERIAL PRIMARY KEY,
+	store_id			smallint NOT NULL,
+	address 			varchar(50) NOT NULL,
+	address2 			varchar(50),
+	district 			varchar(20) NOT NULL,
+	city 				varchar(50) NOT NULL,
+	country 			varchar(50) NOT NULL,
+	postal_code 		varchar(10),
+	manager_first_name 	varchar(45) NOT NULL,
+	manager_last_name 	varchar(45) NOT NULL,
+	start_date			date NOT NULL,
+	end_date			date NOT NULL
+);
+
+#### Insert value into dimstore table
+
+INSERT INTO star.dimstore 
+(store_key, store_id, address, address2, district, city, country, postal_code, manager_first_name,
+manager_last_name, start_date, end_date)
+SELECT
+	s.store_id as store_key,
+	s.store_id,
+	a.address,
+	a.address2,
+	a.district,
+	c.city,
+	co.country,
+	a.postal_code,
+	st.first_name as manager_first_name,
+	st.last_name as manager_last_name,
+	now() as start_date,
+	now() as end_date
+FROM public.store s
+JOIN staff st		ON (s.manager_staff_id = st.staff_id)
+JOIN address a		ON (s.address_id = a.address_id)
+JOIN city c			ON (a.city_id = c.city_id)
+JOIN country co		ON (c.country_id = co.country_id);
+
+
+#### Create fact table for sales combining key column of dimension table + measure (sales amount)
+
+CREATE TABLE star.factSales
+(
+	sales_key SERIAL PRIMARY KEY,
+	date_key integer REFERENCES star.dimDate (date_key),
+	customer_key integer REFERENCES star.dimCustomer (customer_key),
+	movie_key integer REFERENCES star.dimMovie (movie_key),
+	store_key integer REFERENCES star.dimStore (store_key),
+	sales_amount numeric
+);
+
+#### Insert value into factsales table
+
+INSERT INTO star.factSales
+(date_key, customer_key, movie_key, store_key, sales_amount)
+SELECT
+	TO_CHAR(payment_date :: DATE, 'yyyMMDD')::integer as date_key,
+	p.customer_id as customer_key,
+	i.film_id as movie_key,
+	i.store_id as store_key,
+	p.amount as sales_amount
+FROM public.payment p
+JOIN rental r ON (p.rental_id = r.rental_id)
+JOIN inventory i ON (r.inventory_id = i.inventory_id);
+
+
+#### Query timing
+
+### 3NF schema
+SELECT f.title, EXTRACT(month from p.payment_date) as month, ci.city, sum(p.amount) as revenue
+FROM payment p
+JOIN rental r		ON (p.rental_id = r.rental_id)
+JOIN inventory i	ON (r.inventory_id = i.inventory_id)
+JOIN film f			ON (i.film_id = f.film_id)
+JOIN customer c		ON (p.customer_id = c.customer_id)
+JOIN address a 		ON (c.address_id = a.address_id)
+JOIN city ci		ON (a.city_id = ci.city_id)
+group by (f.title,month, ci.city)
+order by f.title, month, ci.city, revenue desc;
+
+
+### Star schema
+
+select m.title, d.month, c.city, sum(sales_amount) as revenue
+FROM star.factSales
+JOIN star.dimMovie m	ON (m.movie_key = factSales.movie_key)
+JOIN star.dimDate d		ON (d.date_key = factSales.date_key)
+JOIN star.dimCustomer c	ON (c.customer_key = factSales.customer_key)
+group by (m.title, d.month, c.city)
+order by m.title, d.month, c.city, revenue desc;
