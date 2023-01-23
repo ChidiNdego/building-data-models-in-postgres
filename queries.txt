@@ -182,14 +182,15 @@ JOIN rental r ON (p.rental_id = r.rental_id)
 JOIN inventory i ON (r.inventory_id = i.inventory_id);
 
 
-#### Query timing
+#### Query timing comparison
 
 ### 3NF schema
+
 SELECT f.title, EXTRACT(month from p.payment_date) as month, ci.city, sum(p.amount) as revenue
 FROM payment p
 JOIN rental r		ON (p.rental_id = r.rental_id)
 JOIN inventory i	ON (r.inventory_id = i.inventory_id)
-JOIN film f			ON (i.film_id = f.film_id)
+JOIN film f		ON (i.film_id = f.film_id)
 JOIN customer c		ON (p.customer_id = c.customer_id)
 JOIN address a 		ON (c.address_id = a.address_id)
 JOIN city ci		ON (a.city_id = ci.city_id)
@@ -202,7 +203,7 @@ order by f.title, month, ci.city, revenue desc;
 select m.title, d.month, c.city, sum(sales_amount) as revenue
 FROM star.factSales
 JOIN star.dimMovie m	ON (m.movie_key = factSales.movie_key)
-JOIN star.dimDate d		ON (d.date_key = factSales.date_key)
+JOIN star.dimDate d	ON (d.date_key = factSales.date_key)
 JOIN star.dimCustomer c	ON (c.customer_key = factSales.customer_key)
 group by (m.title, d.month, c.city)
 order by m.title, d.month, c.city, revenue desc;

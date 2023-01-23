@@ -27,7 +27,7 @@ The tool advisable for this type of complex system is a Data Warehouse. Examples
 A data warehouse is similar to RDBMS, but where data are stored by rows in databases, data in data warehouses are stored by columns.
 A row-based database system won't give you the performance needed for data analytics with high volume of data.
 
---- Image to show OLAP and OTAP
+![OLTP vs OLAP](Images/oltp_vs_olap.png)
 
 ### Building a Star schema from a 3NF relational database model
 
@@ -51,7 +51,7 @@ The attribute format of fact table is in numerical format and text format, while
 
 #### Schema Design Thinking
 
-To convert our complex data model to a simpler one, we need to identify KEY descriptive attributes that'll make up our dimension table. The primary key column in these dimension tables as well as our measure column, will make up the fact table.
+To convert our complex data model to a simpler one, we need to identify KEY descriptive attributes that'll make up our dimension table. The primary key column in these dimension tables as well as our measure column, will form our fact table.
 
 From the ER model of our DVD rental database, we can tell that attributes such as customers' city, country, and address could be lumped together in one table. Similarly, film category, title, and language, do not need to be stand alone tables.
 
@@ -72,9 +72,9 @@ In comparing the query time to extract data from our models, we'll attempt to re
 
 Conclusively, we may observe that the query time saved between the two models isn't distinguished and this can be attributed to the size of our data - relatively small. However, with increasing data size, the time and space complexity is expected to increases exponentially. 
 
-Finally, to avoid running out of resources when executing queries in large databases, especially for analytical purposes (OLAP), we need to ensure that the underlying database model is built like a star schema in a data warehouse rather than a relational database.
+Finally, to avoid running out of resources when executing complex queries in large databases, especially for analytical purposes (OLAP), we need to ensure that the underlying database model is built like a star schema in a data warehouse rather than a relational database model.
 
-If you have questions regarding this project, please do [send me a mail](mailto:chidindego@gmail.com). Thanks for your time. 
+If you have questions regarding this project, please do [send me a mail](mailto:chidindego@gmail.com) and thanks for your time. 
 
 ### Reference
 
