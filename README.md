@@ -27,7 +27,7 @@ The tool advisable for this type of complex system is a Data Warehouse. Examples
 A data warehouse is similar to RDBMS, but where data are stored by rows in databases, data in data warehouses are stored by columns.
 A row-based database system won't give you the performance needed for data analytics with high volume of data.
 
-![OLTP vs OLAP](Images/oltp_vs_olap.png)
+![OLTP vs OLAP](Images/oltp_vs_olap_flow.png)
 
 ### Building a Star schema from a 3NF relational database model
 
