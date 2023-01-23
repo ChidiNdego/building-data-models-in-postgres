@@ -39,6 +39,7 @@ In this exercise, we'll user a PostgreSQL sample database. The DVD rental databa
 To load the DVD rental database to local PostgreSQL server after downloading, follow the instruction [here](https://www.postgresqltutorial.com/postgresql-getting-started/load-postgresql-sample-database/).
 
 ![DVD Rental 3NF Schema](Images/3nf_schema.png)
+
 *figure 2: DVD rental 3NF schema*
 
 The above is the ER model of our dvdrental database. It takes the structure of a third normal form (3NF). This model is considered adequate for normal relational database design becasue most of the tables are free of insertion, update, and deletion anomalies. However, if we intend to build a near real-time analytical dashboard that displays DVD rentals over time for the concerned team, querying the database will become inefficient with increasing data size. Hence, the need for a simpler data model, in this case, a star schema.
@@ -60,6 +61,7 @@ From the ER model of our DVD rental database, we can tell that attributes such a
 On this basis, we go ahead to generate queries that'll eventually form the structure of our star shema as shown below. 
 
 ![DVD Rental Star Schema Design](Images/star_schema.jpg)
+
 *figure 3: DVD rental star schema*
 
 The queries that creates and inserts values to the dimension and fact tables seen above can be found [here](queries.txt).
